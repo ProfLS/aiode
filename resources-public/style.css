@@ -1,11 +1,15 @@
 .general-wrapper {
-    font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif;
-    font-size: 14px;
+    font-family: Calibri, Arial, sans-serif;
+    font-size: 22px;
+    font-weight:normal;
+    color: hsl(0, 0%, 94%);
 }
 
 .head-wrapper {
-    font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif;
-    font-size: 20px;
+    font-size: 34px;
+    font-family: Calibri, Arial, sans-serif;
+    font-weight:bold;
+    color: hsl(0, 0%, 94%);
 }
 
 
@@ -15,4 +19,25 @@
 
 .head-table td {
     padding: 10px;
+}
+
+.bg-default {
+    background:hsl(0, 11%, 9%);
+    background-repeat: no-repeat;
+    background-size:cover;
+    width:100%;
+    height:100%;
+}
+
+.container {
+    background:hsl(0, 11%, 9%);
+    background-size: cover;
+    border-radius: 10px;
+    gap: 20px;
+    display: flex;
+}
+
+.content {
+    height:100%;
+    width:100%;
 }
