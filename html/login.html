@@ -1,15 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="
+background:hsl(0, 11%, 9%);
+background: radial-gradient(circle at right bottom,rgba(30,215,96,1) 0%, rgba(25,20,20,1) 28%, rgba(25,20,20,1) 72%,  rgba(157,131,131,1) 100%);
+background-repeat: no-repeat;
+background-size:cover;
+width:100%;
+height:100%;
+">
 
     <head>
-        <title>botify login</title>
+        <title>Prof's Piano Spotify Login</title>
+        <link rel="stylesheet" href="../resources-public/style.css"/>
         <link rel="icon" type="image/png" href="resources-public/img/aiode-logo.png"/>
         <meta charset="UTF-8"/>
+        <meta name="description" content="The landing page for Spotify API logins via Prof's Piano."/>
     </head>
 
-    <body>
-        <img width="400" height="175" src="resources-public/img/aiode-logo-wide.png"/>
-        <p style="font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif; font-size: 30px;">%s</p>
+    <body style="margin:auto; width:100%; text-align: center; overflow-y: hidden;">
+
+        <h1 style="color:hsl(141, 73%, 42%); font-family:Calibri,Arial; font-size:68px; font-weight: bold; margin-bottom: 10px">
+            %s
+        </h1>
+
+        <h2 class="general-wrapper" style="font-size:28px; font-weight:bold; margin-bottom: 10px;">
+            Your spotify library is now linked to Prof’s Piano
+        </h2>
+
+        <div style="display: flex; justify-content: center;">
+            <img 
+                src="..\resources-public\img\SpotifyLink.png" 
+                alt="Spotify linked with Prof's Piano"
+                style="object-fit: cover; aspect-ratio: 16/9; overflow: hidden;"
+                width="auto"
+                height="500px"
+                
+            />
+        </div>
+
+        <p>
+            <span class="general-wrapper" style="margin-right: 20px;">Use</span>
+            <span class="general-wrapper" style="font-family:'Courier New', Courier, monospace; background-color: hsl(0, 9%, 17%); padding: 5px; border-radius:15px">=spotify &ltplaylist name&gt</span>
+            <span class="general-wrapper" style="margin-left: 20px;">to access a playlist you own.</span>
+        </p>
+
     </body>
 
 </html>
