@@ -14,6 +14,13 @@
     <example title="Add tracks from the current queue to a list">%1$sadd %2$squeue my list</example>
     <example title="Add tracks from a url">%1$sadd http://someurl.com %2$sto linkin park</example>
   </command>
+  <command identifier="playnext"
+           implementation="net.robinfriedli.aiode.command.commands.playback.PlaynextCommand"
+           requiresInput="true"
+           category="GENERAL"
+           description="Play a song next, then resume the queue after playback is finished.">
+    <example title="Play Numb by Linkin Park after the currently playing song, then resume queue.">%1$splaynext Numb</example>
+  </command>
   <command identifier="answer"
            implementation="net.robinfriedli.aiode.command.commands.general.AnswerCommand"
            requiresInput="true"
