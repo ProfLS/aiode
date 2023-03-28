@@ -53,6 +53,7 @@ public class PlaynextCommand extends AbstractQueueLoadingCommand{
         }
 
         audioQueue.insert(0, queueFragment);
+        sendMessage("MEOW");
     }
 
     @Override
