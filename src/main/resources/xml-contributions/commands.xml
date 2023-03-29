@@ -19,7 +19,9 @@
            requiresInput="true"
            category="PLAYBACK"
            description="Play a song next, then resume the queue after playback is finished.">
-    <example title="Play Numb by Linkin Park after the currently playing song, then resume queue.">%1$splaynext Numb</example>
+    <example title="Play Numb by Linkin Park after the currently playing song, then resume queue.">%1$snext Numb</example>
+    <example title="Play a youtube playlist after the currently playing song, then resume queue.">%1$snext https://www.youtube.com/playlist?list</example>
+    <example title="Play your playlist from spotify called Pop after the currently playing song, then resume queue.">%1$snext -list -own -spotify Pop</example>
   </command>
   <command identifier="answer"
            implementation="net.robinfriedli.aiode.command.commands.general.AnswerCommand"
