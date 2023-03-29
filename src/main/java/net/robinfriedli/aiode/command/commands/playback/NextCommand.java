@@ -52,14 +52,13 @@ public class NextCommand extends AbstractQueueLoadingCommand {
             throw new NoResultsFoundException("Nothing was found! Error with playableFactory.");
         }
 
-        audioQueue.insert(0, queueFragment);
-        sendMessage("MEOW");
+        audioQueue.insert(1, queueFragment);
     }
 
     @Override
     public void onSuccess() {
         if (loadedTrack != null) {
-            sendSuccess("Playing " + loadedTrack.display() + "next");
+            sendSuccess("Playing " + loadedTrack.display() + " next");
         }
         if (loadedLocalList != null) {
             sendSuccess(String.format("Playing playlist '%s' next", loadedLocalList.getName()));
@@ -77,12 +76,12 @@ public class NextCommand extends AbstractQueueLoadingCommand {
             sendSuccess(String.format("Playing %d item%s tracks then resuming queue", loadedAmount, loadedAmount == 1 ? "" : "s"));
         }
         if (loadedAudioTrack != null) {
-            sendSuccess("Playing track " + loadedAudioTrack.getInfo().title + "next");
+            sendSuccess("Playing track " + loadedAudioTrack.getInfo().title + " next");
         }
         if (loadedAudioPlaylist != null) {
             String name = loadedAudioPlaylist.getName();
             if (!Strings.isNullOrEmpty(name)) {
-                sendSuccess("Playing playlist " + name + "next");
+                sendSuccess("Playing playlist " + name + " next");
             } else {
                 int size = loadedAudioPlaylist.getTracks().size();
                 sendSuccess(String.format("Playing %d item%s then resuming queue", size, size == 1 ? "" : "s"));
@@ -90,7 +89,7 @@ public class NextCommand extends AbstractQueueLoadingCommand {
         }
         if (loadedShow != null) {
             String name = loadedShow.getName();
-            sendSuccess("Playing podcast " + name + "next");
+            sendSuccess("Playing podcast " + name + " next");
         }
     }
     @Override
