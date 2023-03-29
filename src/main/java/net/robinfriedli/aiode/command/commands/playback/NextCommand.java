@@ -52,7 +52,7 @@ public class NextCommand extends AbstractQueueLoadingCommand {
             throw new NoResultsFoundException("Nothing was found! Error with playableFactory.");
         }
 
-        audioQueue.insert(1, queueFragment);
+        audioQueue.insert(audioQueue.getPosition() + 1, queueFragment);
     }
 
     @Override
