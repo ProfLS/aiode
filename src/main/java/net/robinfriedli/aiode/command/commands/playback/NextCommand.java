@@ -20,9 +20,9 @@ import net.robinfriedli.aiode.entities.xml.CommandContribution;
 import net.robinfriedli.aiode.exceptions.NoResultsFoundException;
 import net.robinfriedli.aiode.exceptions.UserException;
 
-public class PlaynextCommand extends AbstractQueueLoadingCommand{
+public class NextCommand extends AbstractQueueLoadingCommand {
 
-    public PlaynextCommand(CommandContribution commandContribution, CommandContext context, CommandManager commandManager, String commandString, boolean requiresInput, String identifier, String description, Category category) {
+    public NextCommand(CommandContribution commandContribution, CommandContext context, CommandManager commandManager, String commandString, boolean requiresInput, String identifier, String description, Category category) {
         super(
                 commandContribution,
                 context,
