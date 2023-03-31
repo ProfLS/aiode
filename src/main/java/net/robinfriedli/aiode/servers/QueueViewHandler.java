@@ -60,9 +60,6 @@ public class QueueViewHandler implements HttpHandler {
                                 }
                                 appendList(listBuilder, previous, "Previous");
                             }
-                            listBuilder.append("<div id=\"current\">").append(System.lineSeparator());
-                            appendList(listBuilder, Collections.singletonList(queue.getCurrentLocked()), "Current");
-                            listBuilder.append("</div>").append(System.lineSeparator());
                             if (!next.isEmpty()) {
                                 appendList(listBuilder, next, "Next");
                             }
@@ -80,6 +77,7 @@ public class QueueViewHandler implements HttpHandler {
                         boolToString(playback.isShuffle()),
                         boolToString(playback.isRepeatAll()),
                         boolToString(playback.isRepeatOne()),
+                        queue.getCurrentLocked(),
                         content);
 
                     byte[] bytes = response.getBytes();
@@ -102,7 +100,7 @@ public class QueueViewHandler implements HttpHandler {
     }
 
     private void appendList(StringBuilder listBuilder, List<Playable> playables, String title) {
-        listBuilder.append("<h3>").append(title).append("</h3>").append(System.lineSeparator());
+        listBuilder.append("<h3 class=\"home-text4 home-text3\">").append(title).append("</h3>").append(System.lineSeparator());
         listBuilder.append("<table class=\"content-table\">").append(System.lineSeparator());
         listBuilder.append("<tbody>").append(System.lineSeparator());
         for (Playable playable : playables) {
