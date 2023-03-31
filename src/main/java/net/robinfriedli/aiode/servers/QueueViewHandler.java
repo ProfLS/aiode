@@ -101,7 +101,7 @@ public class QueueViewHandler implements HttpHandler {
     }
 
     private void appendList(StringBuilder listBuilder, List<Playable> playables, String title) {
-        listBuilder.append("<h3 class=\"home-text4 home-text3\">").append(title).append("</h3>").append(System.lineSeparator());
+        listBuilder.append("<h3 class=\"home-text4 home-text3 home-text8\">").append(title).append("</h3>").append(System.lineSeparator());
         listBuilder.append("<table class=\"content-table\">").append(System.lineSeparator());
         listBuilder.append("<tbody>").append(System.lineSeparator());
         for (Playable playable : playables) {
