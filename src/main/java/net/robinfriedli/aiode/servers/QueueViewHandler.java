@@ -45,6 +45,7 @@ public class QueueViewHandler implements HttpHandler {
                     AudioPlayback playback = audioManager.getPlaybackForGuild(guild);
                     AudioQueue queue = playback.getAudioQueue();
                     String content;
+                    String current = new String();
                     if (!queue.isEmpty()) {
                         Lock readLock = queue.getLock().readLock();
                         readLock.lock();
@@ -63,7 +64,7 @@ public class QueueViewHandler implements HttpHandler {
                             if (!next.isEmpty()) {
                                 appendList(listBuilder, next, "Next");
                             }
-
+                            current = queue.getCurrentLocked().getTitle();
                             content = listBuilder.toString();
                         } finally {
                             readLock.unlock();
@@ -77,7 +78,7 @@ public class QueueViewHandler implements HttpHandler {
                         boolToString(playback.isShuffle()),
                         boolToString(playback.isRepeatAll()),
                         boolToString(playback.isRepeatOne()),
-                        queue.getCurrentLocked(),
+                        current,
                         content);
 
                     byte[] bytes = response.getBytes();
