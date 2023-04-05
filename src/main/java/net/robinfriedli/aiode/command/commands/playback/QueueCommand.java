@@ -59,6 +59,11 @@ public class QueueCommand extends AbstractQueueLoadingCommand {
             throw new NoResultsFoundException("Result is empty!");
         }
 
+        if (argumentSet("insert")) {
+            int position = getArgumentValueWithType("insert", Integer.class);
+            audioQueue.insert(audioQueue.getPosition() + position, queueFragment);
+        }
+
         audioQueue.add(queueFragment);
     }
 

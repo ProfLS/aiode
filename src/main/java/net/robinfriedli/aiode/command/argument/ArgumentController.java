@@ -3,11 +3,14 @@ package net.robinfriedli.aiode.command.argument;
 import java.util.Map;
 import java.util.function.Function;
 
+import net.robinfriedli.aiode.audio.AudioManager;
+import net.robinfriedli.aiode.audio.queue.AudioQueue;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 import groovy.lang.GroovyShell;
 import net.robinfriedli.aiode.Aiode;
 import net.robinfriedli.aiode.command.AbstractCommand;
+import net.robinfriedli.aiode.command.CommandContext;
 import net.robinfriedli.aiode.discord.property.properties.ArgumentPrefixProperty;
 import net.robinfriedli.aiode.discord.property.properties.PrefixProperty;
 import net.robinfriedli.aiode.entities.xml.CommandContribution;
@@ -29,6 +32,8 @@ public class ArgumentController {
     private final CommandContribution commandContribution;
     private final Map<String, ArgumentUsage> usedArguments;
     private final GroovyShell groovyShell;
+
+    CommandContext context;
 
     private boolean shellInitialised;
 
@@ -245,10 +250,14 @@ public class ArgumentController {
             if (hasValue()) {
                 for (XmlElement valueCheck : argument.getValueChecks()) {
                     String check = valueCheck.getAttribute("check").getValue();
+                    Aiode aiode = Aiode.get();
+                    AudioManager audioManager = aiode.getAudioManager();
+                    AudioQueue queue = audioManager.getQueue(context.getGuild());
+                    Integer queueSize = queue.getSize();
                     if (!evaluateScript(check)) {
                         String prefix = PrefixProperty.getEffectiveCommandStartForCurrentContext();
                         char argumentPrefix = ArgumentPrefixProperty.getForCurrentContext().getArgumentPrefix();
-                        throw new InvalidCommandException(String.format(valueCheck.getAttribute("errorMessage").getValue(), prefix, argumentPrefix));
+                        throw new InvalidCommandException(String.format(valueCheck.getAttribute("errorMessage").getValue(), prefix, argumentPrefix, queueSize));
                     }
                 }
             }

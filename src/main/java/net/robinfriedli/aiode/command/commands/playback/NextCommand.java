@@ -36,7 +36,8 @@ public class NextCommand extends AbstractQueueLoadingCommand {
         );
     }
 
-    @Override public void doRun() throws Exception {
+    @Override
+    public void doRun() throws Exception {
         if (getCommandInput().isBlank()) {
             throw new UserException("This command requires an input title or link.");
         } else {
