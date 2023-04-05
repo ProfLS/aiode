@@ -92,7 +92,7 @@
            requiresInput="false"
            category="PLAYBACK"
            description="Display the current queue or add a youtube video or playlist, spotify track or playlist, local playlist or any URL to the current queue. Spotify search queries support the Spotify query syntax (i.e. the &quot;artist:&quot;, &quot;album:&quot; and &quot;track:&quot; filters). Which source is used is decided by the used arguments or the default source and default list source properties.">
-    <argument identifier="insert" valueType="jave.lang.Integer" requiresValue="true" description="Inserts song at specified position in queue.">
+    <argument identifier="insert" valueType="java.lang.Integer" requiresValue="true" description="Inserts song at specified position in queue.">
       <valueCheck errorMessage="Position must be between 1 and %3$s" check="value &gt; 0 &amp;&amp; value &lt; %3$d"/>
       <rule errorMessage="Argument 'insert' requires an integer input">!AbstractCommand.getCommandInput.isBlank()</rule>
     </argument>
