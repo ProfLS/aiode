@@ -53,11 +53,12 @@ public class QueueCommand extends AbstractQueueLoadingCommand {
 
     @Override
     protected void handleResult(PlayableContainer<?> playableContainer, PlayableFactory playableFactory) {
-        AudioQueue audioQueue = getContext().getGuildContext().getPlayback().getAudioQueue();
         Aiode aiode = Aiode.get();
+        AudioQueue audioQueue = getContext().getGuildContext().getPlayback().getAudioQueue();
         AudioManager audioManager = aiode.getAudioManager();
         Integer queueSize = audioQueue.getSize();
         QueueFragment queueFragment = playableContainer.createQueueFragment(playableFactory, audioQueue);
+
         if (queueFragment == null) {
             throw new NoResultsFoundException("Result is empty!");
         }

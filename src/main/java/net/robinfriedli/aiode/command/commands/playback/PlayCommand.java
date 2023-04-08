@@ -73,7 +73,7 @@ public class PlayCommand extends AbstractQueueLoadingCommand {
         String input = getCommandBody();
 
         if (audioPlayer.getPlayingTrack() != null) {
-            run("queue" + "input");
+            run("queue" + input);
             abort();
             sendMessage("Something was playing, so I queued your input instead.");
         } else {

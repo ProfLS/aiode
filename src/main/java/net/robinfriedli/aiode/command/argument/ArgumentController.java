@@ -33,8 +33,6 @@ public class ArgumentController {
     private final Map<String, ArgumentUsage> usedArguments;
     private final GroovyShell groovyShell;
 
-    CommandContext context;
-
     private boolean shellInitialised;
 
     public ArgumentController(AbstractCommand sourceCommand) {
@@ -250,14 +248,11 @@ public class ArgumentController {
             if (hasValue()) {
                 for (XmlElement valueCheck : argument.getValueChecks()) {
                     String check = valueCheck.getAttribute("check").getValue();
-                    Aiode aiode = Aiode.get();
-                    AudioManager audioManager = aiode.getAudioManager();
-                    AudioQueue queue = audioManager.getQueue(context.getGuild());
-                    Integer queueSize = queue.getSize();
+
                     if (!evaluateScript(check)) {
                         String prefix = PrefixProperty.getEffectiveCommandStartForCurrentContext();
                         char argumentPrefix = ArgumentPrefixProperty.getForCurrentContext().getArgumentPrefix();
-                        throw new InvalidCommandException(String.format(valueCheck.getAttribute("errorMessage").getValue(), prefix, argumentPrefix, queueSize));
+                        throw new InvalidCommandException(String.format(valueCheck.getAttribute("errorMessage").getValue(), prefix, argumentPrefix));
                     }
                 }
             }
