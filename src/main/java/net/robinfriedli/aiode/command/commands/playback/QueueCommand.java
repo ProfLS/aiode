@@ -54,17 +54,24 @@ public class QueueCommand extends AbstractQueueLoadingCommand {
     @Override
     protected void handleResult(PlayableContainer<?> playableContainer, PlayableFactory playableFactory) {
         AudioQueue audioQueue = getContext().getGuildContext().getPlayback().getAudioQueue();
+        Aiode aiode = Aiode.get();
+        AudioManager audioManager = aiode.getAudioManager();
+        Integer queueSize = audioQueue.getSize();
         QueueFragment queueFragment = playableContainer.createQueueFragment(playableFactory, audioQueue);
         if (queueFragment == null) {
             throw new NoResultsFoundException("Result is empty!");
         }
 
         if (argumentSet("insert")) {
-            int position = getArgumentValueWithType("insert", Integer.class);
-            audioQueue.insert(audioQueue.getPosition() + position, queueFragment);
+            if (getArgumentValueWithType("insert", Integer.class) <= queueSize) {
+                int position = getArgumentValueWithType("insert", Integer.class);
+                audioQueue.insert(audioQueue.getPosition() + position, queueFragment);
+            } else {
+                throw new IllegalArgumentException("The position specified is beyond the scope of the current queue!");
+            }
+        } else {
+            audioQueue.add(queueFragment);
         }
-
-        audioQueue.add(queueFragment);
     }
 
     private void listQueue() {

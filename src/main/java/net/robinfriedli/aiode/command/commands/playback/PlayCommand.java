@@ -17,9 +17,11 @@ import net.robinfriedli.aiode.audio.playables.PlayableContainerManager;
 import net.robinfriedli.aiode.audio.playables.PlayableFactory;
 import net.robinfriedli.aiode.audio.queue.AudioQueue;
 import net.robinfriedli.aiode.audio.queue.QueueFragment;
+import net.robinfriedli.aiode.command.AbstractCommand;
 import net.robinfriedli.aiode.command.CommandContext;
 import net.robinfriedli.aiode.command.CommandManager;
 import net.robinfriedli.aiode.command.commands.AbstractQueueLoadingCommand;
+import net.robinfriedli.aiode.command.commands.general.AbortCommand;
 import net.robinfriedli.aiode.entities.xml.CommandContribution;
 import net.robinfriedli.aiode.exceptions.InvalidCommandException;
 import net.robinfriedli.aiode.exceptions.NoResultsFoundException;
@@ -66,22 +68,25 @@ public class PlayCommand extends AbstractQueueLoadingCommand {
         Guild guild = getContext().getGuild();
         AudioChannel channel = getContext().getAudioChannel();
         AudioManager audioManager = Aiode.get().getAudioManager();
-
         AudioPlayback playback = getContext().getGuildContext().getPlayback();
         AudioPlayer audioPlayer = playback.getAudioPlayer();
+        String input = getCommandBody();
+
         if (audioPlayer.getPlayingTrack() != null) {
-            audioPlayer.stopTrack();
+            run("queue" + "input");
+            abort();
+            sendMessage("Something was playing, so I queued your input instead.");
+        } else {
+            AudioQueue audioQueue = playback.getAudioQueue();
+
+            QueueFragment queueFragment = playableContainer.createQueueFragment(playableFactory, audioQueue);
+            if (queueFragment == null) {
+                throw new NoResultsFoundException("Result is empty!");
+            }
+
+            audioQueue.set(queueFragment);
+            audioManager.startPlayback(guild, channel);
         }
-
-        AudioQueue audioQueue = playback.getAudioQueue();
-
-        QueueFragment queueFragment = playableContainer.createQueueFragment(playableFactory, audioQueue);
-        if (queueFragment == null) {
-            throw new NoResultsFoundException("Result is empty!");
-        }
-
-        audioQueue.set(queueFragment);
-        audioManager.startPlayback(guild, channel);
     }
 
     @Override
