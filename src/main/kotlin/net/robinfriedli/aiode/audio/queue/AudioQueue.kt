@@ -575,6 +575,7 @@ class AudioQueue(val maxSize: Int?) {
 
     private fun doInsert(idx: Int, fragment: QueueFragment) {
         if (isShuffle) {
+            // TODO Rework Random component for insertIndices to fix bug where NextCommand queues fragment at random spot when on currIdx == size or size + 1
             val random = Random()
             // when appending to the end of the queue use a random index instead, when inserting at a specific index,
             // use that index for the first node

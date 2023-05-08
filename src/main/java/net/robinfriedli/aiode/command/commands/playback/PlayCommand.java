@@ -75,11 +75,11 @@ public class PlayCommand extends AbstractQueueLoadingCommand {
         if (audioPlayer.getPlayingTrack() != null) {
             run("queue" + input);
             abort();
-            sendMessage("Something was playing, so I queued your input instead.");
+            sendSuccess("Something was playing, so I queued your input instead.");
         } else {
             AudioQueue audioQueue = playback.getAudioQueue();
-
             QueueFragment queueFragment = playableContainer.createQueueFragment(playableFactory, audioQueue);
+
             if (queueFragment == null) {
                 throw new NoResultsFoundException("Result is empty!");
             }
