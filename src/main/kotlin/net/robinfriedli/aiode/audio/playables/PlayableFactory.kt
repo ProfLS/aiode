@@ -17,6 +17,7 @@ import net.robinfriedli.aiode.audio.spotify.SpotifyTrack
 import net.robinfriedli.aiode.audio.youtube.HollowYouTubeVideo
 import net.robinfriedli.aiode.audio.youtube.YouTubePlaylist
 import net.robinfriedli.aiode.audio.youtube.YouTubeService
+import net.robinfriedli.aiode.exceptions.CommandRuntimeException
 import net.robinfriedli.aiode.exceptions.InvalidCommandException
 import net.robinfriedli.aiode.exceptions.NoResultsFoundException
 import net.robinfriedli.aiode.function.ChainableRunnable
@@ -172,7 +173,17 @@ class PlayableFactory(
                 SinglePlayableContainer(youTubeVideo)
             }
             uri.host == "open.spotify.com" -> {
-                createPlayableContainerFromSpotifyUrl(uri, spotifyService.spotifyApi)
+                try {
+                    createPlayableContainerFromSpotifyUrl(uri, spotifyService.spotifyApi)
+                } catch (e: NotFoundException) {
+                    throw NoResultsFoundException("No results found for provided spotify URL", e)
+                } catch (e: CommandRuntimeException) {
+                    if (e.cause is NotFoundException) {
+                        throw NoResultsFoundException("No results found for provided spotify URL", e.cause)
+                    } else {
+                        throw e
+                    }
+                }
             }
             else -> createPlayableContainerFromUrl(uri.toString())
         }

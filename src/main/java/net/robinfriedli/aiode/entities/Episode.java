@@ -2,16 +2,16 @@ package net.robinfriedli.aiode.entities;
 
 import java.io.IOException;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-
 import org.apache.hc.core5.http.ParseException;
 
 import com.google.common.base.Strings;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import net.dv8tion.jda.api.entities.User;
 import se.michaelthelin.spotify.SpotifyApi;
 import se.michaelthelin.spotify.exceptions.SpotifyWebApiException;
@@ -22,7 +22,10 @@ import se.michaelthelin.spotify.model_objects.specification.Track;
  * Entity representing Spotify Podcast episodes
  */
 @Entity
-@Table(name = "episode")
+@Table(name = "episode", indexes = {
+    @Index(name = "episode_id_idx", columnList = "id"),
+    @Index(name = "episode_playlist_pk_idx", columnList = "playlist_pk")
+})
 public class Episode extends PlaylistItem {
 
     @Id

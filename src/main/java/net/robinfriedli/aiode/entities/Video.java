@@ -1,15 +1,15 @@
 package net.robinfriedli.aiode.entities;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import net.dv8tion.jda.api.entities.User;
 import net.robinfriedli.aiode.audio.spotify.SpotifyTrack;
 import net.robinfriedli.aiode.audio.spotify.SpotifyTrackKind;
@@ -19,7 +19,10 @@ import net.robinfriedli.aiode.exceptions.UnavailableResourceException;
 import org.hibernate.Session;
 
 @Entity
-@Table(name = "video")
+@Table(name = "video", indexes = {
+    @Index(name = "video_id_idx", columnList = "id"),
+    @Index(name = "video_playlist_pk_idx", columnList = "playlist_pk")
+})
 public class Video extends PlaylistItem {
 
     @Id

@@ -1,17 +1,20 @@
 package net.robinfriedli.aiode.entities;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import net.dv8tion.jda.api.entities.User;
 import net.robinfriedli.aiode.audio.UrlPlayable;
 
 @Entity
-@Table(name = "url_track")
+@Table(name = "url_track", indexes = {
+    @Index(name = "url_track_url_idx", columnList = "url"),
+    @Index(name = "url_track_playlist_pk_idx", columnList = "playlist_pk")
+})
 public class UrlTrack extends PlaylistItem {
 
     @Id
