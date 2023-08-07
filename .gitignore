@@ -8,3 +8,4 @@
 /logs/
 /src/main/resources/settings-private.properties
 /derby.log
+/bin

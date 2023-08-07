@@ -3,11 +3,14 @@ package net.robinfriedli.aiode.command.argument;
 import java.util.Map;
 import java.util.function.Function;
 
+import net.robinfriedli.aiode.audio.AudioManager;
+import net.robinfriedli.aiode.audio.queue.AudioQueue;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 import groovy.lang.GroovyShell;
 import net.robinfriedli.aiode.Aiode;
 import net.robinfriedli.aiode.command.AbstractCommand;
+import net.robinfriedli.aiode.command.CommandContext;
 import net.robinfriedli.aiode.discord.property.properties.ArgumentPrefixProperty;
 import net.robinfriedli.aiode.discord.property.properties.PrefixProperty;
 import net.robinfriedli.aiode.entities.xml.CommandContribution;
@@ -245,6 +248,7 @@ public class ArgumentController {
             if (hasValue()) {
                 for (XmlElement valueCheck : argument.getValueChecks()) {
                     String check = valueCheck.getAttribute("check").getValue();
+
                     if (!evaluateScript(check)) {
                         String prefix = PrefixProperty.getEffectiveCommandStartForCurrentContext();
                         char argumentPrefix = ArgumentPrefixProperty.getForCurrentContext().getArgumentPrefix();

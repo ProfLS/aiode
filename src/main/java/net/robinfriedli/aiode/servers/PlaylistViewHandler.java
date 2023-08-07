@@ -69,8 +69,7 @@ public class PlaylistViewHandler implements HttpHandler {
                     String htmlString = String.format(html,
                         playlist.getName(),
                         playlist.getName(),
-                        Util.normalizeMillis(playlist.getDuration()),
-                        createdUser,
+                        createdUser, Util.normalizeMillis(playlist.getDuration()),
                         playlist.getSize(),
                         getList(playlist));
 
