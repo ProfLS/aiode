@@ -4,20 +4,20 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Set;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-
 import com.google.api.client.util.Sets;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import net.dv8tion.jda.api.entities.Guild;
 import net.robinfriedli.aiode.audio.Playable;
 import net.robinfriedli.aiode.audio.spotify.PlayableTrackWrapper;
@@ -29,7 +29,11 @@ import org.hibernate.Session;
 import se.michaelthelin.spotify.model_objects.specification.ArtistSimplified;
 
 @Entity
-@Table(name = "playback_history")
+@Table(name = "playback_history", indexes = {
+    @Index(name = "playback_history_guild_id_idx", columnList = "guild_id"),
+    @Index(name = "playback_history_track_id_idx", columnList = "track_id"),
+    @Index(name = "playback_history_timestamp_idx", columnList = "timestamp"),
+})
 public class PlaybackHistory implements Serializable {
 
     @Id

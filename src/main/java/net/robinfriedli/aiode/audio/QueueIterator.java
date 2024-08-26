@@ -6,6 +6,9 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
@@ -38,6 +41,8 @@ import org.jetbrains.annotations.Nullable;
  * explicitly starts playing a new playback.
  */
 public class QueueIterator extends AudioEventAdapter {
+
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private static final ThreadPool AUDIO_EVENT_POOL = ThreadPool.Builder.create()
         .setCoreSize(3)
@@ -119,6 +124,11 @@ public class QueueIterator extends AudioEventAdapter {
 
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
+        if (exception.severity == FriendlyException.Severity.COMMON) {
+            logger.warn("Common lavaplayer track error: " + exception.getMessage());
+        } else {
+            logger.error("Lavaplayer track exception", exception);
+        }
         Throwable e = exception;
         while (e.getCause() != null) {
             e = e.getCause();
@@ -135,8 +145,8 @@ public class QueueIterator extends AudioEventAdapter {
             return;
         }
 
-        // don't skip over more than 10 items to avoid a frozen queue
-        if (attemptCount.incrementAndGet() > 10) {
+        // don't skip over more than 3 items to avoid a frozen queue
+        if (attemptCount.incrementAndGet() > 3) {
             MessageChannel communicationChannel = playback.getCommunicationChannel();
             if (communicationChannel != null) {
                 EmbedBuilder embedBuilder = new EmbedBuilder();
@@ -229,7 +239,7 @@ public class QueueIterator extends AudioEventAdapter {
                 embedBuilder.setTitle("Could not load current track");
             }
 
-            if (e.getMessage() != null) {
+            if (e.getMessage() != null && e.getMessage().length() <= 4096) {
                 embedBuilder.setDescription("Message returned by source: " + e.getMessage());
             }
 

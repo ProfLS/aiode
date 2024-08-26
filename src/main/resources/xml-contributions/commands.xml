@@ -92,6 +92,9 @@
            requiresInput="false"
            category="PLAYBACK"
            description="Display the current queue or add a youtube video or playlist, spotify track or playlist, local playlist or any URL to the current queue. Spotify search queries support the Spotify query syntax (i.e. the &quot;artist:&quot;, &quot;album:&quot; and &quot;track:&quot; filters). Which source is used is decided by the used arguments or the default source and default list source properties.">
+    <argument identifier="insert" valueType="java.lang.Integer" requiresValue="true" requiresInput="true" description="Inserts song at specified position in queue.">
+      <valueCheck errorMessage="Position must be between 1 and %3$s" check="value &gt; 0"/>
+    </argument>
     <example title="Display the queue widget">%1$squeue</example>
     <example title="Add a specific track from Spotify to the queue">%1$squeue numb</example>
     <example title="Add a track from a specific artist and album">%1$squeue from the inside artist:linkin park album:meteora</example>
@@ -100,6 +103,35 @@
     <example title="Add tracks from a Spotify playlist in the current user's library to the queue">%1$squeue %2$slist %2$sspotify %2$sown favs</example>
     <example title="Add a YouTube playlist to the queue">%1$squeue %2$syoutube %2$slist memes</example>
     <example title="Add a YouTube playlist to the queue, showing a selection of 5 results">%1$squeue %2$syoutube %2$slist %2$slimit=5 memes</example>
+    <example title="Remove the next 3 tracks from the queue">%1$squeue %2$sremove 1 - 3</example>
+    <example title="Insert track Numb after the current track">%1$squeue %2$sinsert Numb</example>
+    <example title="Insert album Meteora after the 4th to next in the queue">%1$squeue %2$sinsert %2$sat=4 %2$salbum Meteora</example>
+    <argument identifier="remove" requiresInput="true" description="Remove the provided index range (relative to the current position) from the queue. Indexing starts at 1 (so 1 is the next track in the queue) and the range includes the end index (so 1-3 removes the next 3 tracks in the queue).">
+      <excludes argument="album"/>
+      <excludes argument="episode"/>
+      <excludes argument="list"/>
+      <excludes argument="local"/>
+      <excludes argument="market"/>
+      <excludes argument="own"/>
+      <excludes argument="podcast"/>
+      <excludes argument="preview"/>
+      <excludes argument="select"/>
+      <excludes argument="soundcloud"/>
+      <excludes argument="spotify"/>
+      <excludes argument="spotify"/>
+      <excludes argument="youtube"/>
+    </argument>
+    <argument identifier="insert" requiresInput="true" description="Insert items into the queue at a given position. By default or if the 'next' argument is set the items are inserted after the current track, the 'at' argument may be used to insert items at the specified index relative to the current position.">
+      <excludes argument="remove"/>
+    </argument>
+    <argument identifier="next" description="Inserts items after the current position in the queue when used in combination with the 'insert' argument.">
+      <requires argument="insert"/>
+    </argument>
+    <argument identifier="at" valueType="java.lang.Integer" requiresValue="true" description="Inserts items at the given index relative to the current position in the queue when used in combination with the 'insert' argument. Indexing starts at 1, so index 2 inserts the items after the next track in the queue and index 1 inserts the items after the current track (though in that case the 'next' argument should be used instead).">
+      <excludes argument="next"/>
+      <requires argument="insert"/>
+      <rule errorMessage="Index must be 1 or greater">value > 0</rule>
+    </argument>
   </command>
   <command identifier="remove"
            implementation="net.robinfriedli.aiode.command.commands.playlistmanagement.RemoveCommand"
@@ -161,7 +193,7 @@
     </argument>
     <argument identifier="own" description="Limit search to Spotify tracks or playlists in the current user's library. This requires a Spotify login.">
       <rule errorMessage="Argument 'own' may only be used with Spotify.">command.getSource().isSpotify()</rule>
-    </argument>
+    </argument> 
     <argument identifier="select" valueType="java.lang.Integer" description="Show a selection of YouTube playlists / videos or Spotify tracks to chose from. May be assigned a value from 1 to 20: %2$sselect=5">
       <valueCheck errorMessage="Limit must be between 1 and 20" check="value &gt; 0 &amp;&amp; value &lt;= 20"/>
       <rule errorMessage="Argument 'select' may only be used with YouTube or Spotify.">
@@ -447,7 +479,19 @@
            implementation="net.robinfriedli.aiode.command.commands.general.ChartsCommand"
            requiresInput="false"
            category="GENERAL"
-           description="Shows the most popular tracks and artists for this guild and globally"/>
+           description="Shows the most popular tracks and artists globally, for this guild or for this user">
+    <argument identifier="global" description="Show the global charts"/>
+    <argument identifier="guild" description="Show the charts for this guild">
+      <excludes argument="global"/>
+    </argument>
+    <argument identifier="user" description="Show the charts for this user">
+      <excludes argument="global"/>
+      <excludes argument="guild"/>
+    </argument>
+    <example title="Get global charts">%1$scharts</example>
+    <example title="Get current guild charts">%1$scharts %2$sguild</example>
+    <example title="Get current user charts">%1$scharts %2$suser</example>
+  </command>
   <command identifier="abort"
            implementation="net.robinfriedli.aiode.command.commands.general.AbortCommand"
            requiresInput="false"

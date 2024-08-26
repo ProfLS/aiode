@@ -3,15 +3,15 @@ package net.robinfriedli.aiode.entities;
 import java.io.Serializable;
 import java.util.Objects;
 
-import javax.persistence.Cacheable;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.validation.constraints.Size;
-
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
@@ -25,7 +25,11 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 @Entity
-@Table(name = "preset")
+@Table(name = "preset", indexes = {
+    @Index(name = "preset_guild_id_idx", columnList = "guild_id"),
+    @Index(name = "preset_user_id_idx", columnList = "user_id"),
+    @Index(name = "preset_name_idx", columnList = "name"),
+})
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Preset implements Serializable, SanitizedEntity {

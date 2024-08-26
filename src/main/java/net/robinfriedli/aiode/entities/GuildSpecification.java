@@ -4,17 +4,17 @@ import java.io.Serializable;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-import javax.persistence.Cacheable;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.validation.constraints.Size;
 
 import com.google.api.client.util.Sets;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import org.hibernate.annotations.Cache;
@@ -56,8 +56,14 @@ public class GuildSpecification implements Serializable {
     private Integer tempMessageTimeout;
     @Column(name = "default_text_channel_id")
     private String defaultTextChannelId;
+    @Column(name = "default_volume")
+    private Integer defaultVolume;
+    @Column(name = "auto_queue_mode")
+    private Integer autoQueueMode;
     @Column(name = "enable_scripting")
     private Boolean enableScripting;
+    @Column(name = "version_update_alert_sent")
+    private String versionUpdateAlertSent;
     @OneToMany(mappedBy = "guildSpecification")
     private Set<AccessConfiguration> accessConfigurations = Sets.newHashSet();
 
@@ -195,11 +201,35 @@ public class GuildSpecification implements Serializable {
         this.defaultTextChannelId = defaultTextChannelId;
     }
 
+    public Integer getDefaultVolume() {
+        return defaultVolume;
+    }
+
+    public void setDefaultVolume(Integer volume) {
+        this.defaultVolume = volume;
+    }
+
+    public Integer getAutoQueueMode() {
+        return autoQueueMode;
+    }
+
+    public void setAutoQueueMode(Integer autoQueueMode) {
+        this.autoQueueMode = autoQueueMode;
+    }
+
     public Boolean isEnableScripting() {
         return enableScripting;
     }
 
     public void setEnableScripting(Boolean enableScripting) {
         this.enableScripting = enableScripting;
+    }
+
+    public String getVersionUpdateAlertSent() {
+        return versionUpdateAlertSent;
+    }
+
+    public void setVersionUpdateAlertSent(String versionUpdateAlertSent) {
+        this.versionUpdateAlertSent = versionUpdateAlertSent;
     }
 }

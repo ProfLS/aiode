@@ -8,6 +8,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import net.robinfriedli.aiode.Aiode;
 import net.robinfriedli.aiode.audio.AudioManager;
+import net.robinfriedli.aiode.audio.AudioPlayback;
 import net.robinfriedli.aiode.audio.playables.PlayableContainer;
 import net.robinfriedli.aiode.audio.playables.PlayableContainerManager;
 import net.robinfriedli.aiode.audio.playables.PlayableFactory;
@@ -36,7 +37,8 @@ public class NextCommand extends AbstractQueueLoadingCommand {
         );
     }
 
-    @Override public void doRun() throws Exception {
+    @Override
+    public void doRun() throws Exception {
         if (getCommandInput().isBlank()) {
             throw new UserException("This command requires an input title or link.");
         } else {
@@ -48,11 +50,22 @@ public class NextCommand extends AbstractQueueLoadingCommand {
     protected void handleResult(PlayableContainer<?> playableContainer, PlayableFactory playableFactory) {
         AudioQueue audioQueue = getContext().getGuildContext().getPlayback().getAudioQueue();
         QueueFragment queueFragment = playableContainer.createQueueFragment(playableFactory, audioQueue);
+        AudioPlayback playback = Aiode.get().getAudioManager().getPlaybackForGuild(getContext().getGuild());
+
         if (queueFragment == null) {
             throw new NoResultsFoundException("Nothing was found! Error with playableFactory.");
         }
+        //TODO: suck my dick why the fuck wont the node list work or not work consistently imma cry whyyyyy ive checked every goddamn use case whYYYwuYJAUYUISDFIuysagfdiukashfou
+        if (audioQueue.isShuffle()) {
+            audioQueue.insert(audioQueue.getPosition() + 1, queueFragment);
+        } else {
+            audioQueue.insert(audioQueue.getPosition() + 1, queueFragment);
+        }
 
-        audioQueue.insert(audioQueue.getPosition() + 1, queueFragment);
+        /* Check if loaded track is ACTUALLY next track in the fragment. For debugging */
+        if (!loadedTrack.title().equals(audioQueue.peekNext().title())) {
+            sendError("Something went wrong! The next track is " + audioQueue.peekNext().title() + " but the loaded track was " + loadedTrack.title() + "Here's more info: " + "idx: " + audioQueue.getPosition() + " track: " + audioQueue.peekNext().title());
+        }
     }
 
     @Override
