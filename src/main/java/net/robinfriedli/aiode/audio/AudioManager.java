@@ -22,11 +22,14 @@ import com.sedmelluq.discord.lavaplayer.source.http.HttpAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.lava.extensions.youtuberotator.YoutubeIpRotatorSetup;
 import com.sedmelluq.lava.extensions.youtuberotator.planner.RotatingNanoIpRoutePlanner;
 import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.IpBlock;
 import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.Ipv6Block;
+import dev.lavalink.youtube.YoutubeAudioSourceManager;
+import dev.lavalink.youtube.clients.Music;
+import dev.lavalink.youtube.clients.TvHtml5Embedded;
+import dev.lavalink.youtube.clients.Web;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -49,6 +52,7 @@ import net.robinfriedli.aiode.discord.GuildManager;
 import net.robinfriedli.aiode.entities.PlaybackHistory;
 import net.robinfriedli.aiode.entities.UserPlaybackHistory;
 import net.robinfriedli.aiode.exceptions.InvalidCommandException;
+import net.robinfriedli.filebroker.FilebrokerApi;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -62,28 +66,29 @@ public class AudioManager extends AbstractShutdownable {
 
     private final AudioPlayerManager playerManager;
     private final AudioTrackLoader audioTrackLoader;
+    private final FilebrokerApi filebrokerApi;
     private final GuildManager guildManager;
     private final HibernateComponent hibernateComponent;
     private final Logger logger;
     private final YouTubeService youTubeService;
 
     public AudioManager(
+        FilebrokerApi filebrokerApi,
         GuildManager guildManager,
         HibernateComponent hibernateComponent,
         YouTubeService youTubeService,
-        @Value("${aiode.preferences.ipv6_blocks:#{null}}") String ipv6Blocks,
-        @Value("${aiode.tokens.yt-email:#{null}}") String ytEmail,
-        @Value("${aiode.tokens.yt-password:#{null}}") String ytPassword
+        @Value("${aiode.preferences.ipv6_blocks:#{null}}") String ipv6Blocks
     ) {
         playerManager = new DefaultAudioPlayerManager();
         audioTrackLoader = new AudioTrackLoader(playerManager);
 
+        this.filebrokerApi = filebrokerApi;
         this.guildManager = guildManager;
         this.hibernateComponent = hibernateComponent;
         this.logger = LoggerFactory.getLogger(getClass());
         this.youTubeService = youTubeService;
 
-        playerManager.registerSourceManager(new YoutubeAudioSourceManager(true, ytEmail, ytPassword));
+        playerManager.registerSourceManager(new YoutubeAudioSourceManager(new Music(), new Web(), new TvHtml5Embedded()));
         playerManager.registerSourceManager(SoundCloudAudioSourceManager.createDefault());
         playerManager.registerSourceManager(new BandcampAudioSourceManager());
         playerManager.registerSourceManager(new VimeoAudioSourceManager());
@@ -108,7 +113,9 @@ public class AudioManager extends AbstractShutdownable {
                 .collect(Collectors.toList());
 
             YoutubeIpRotatorSetup youtubeIpRotatorSetup = new YoutubeIpRotatorSetup(new RotatingNanoIpRoutePlanner(ipv6BlockList, ip -> true, true));
-            youtubeIpRotatorSetup.forSource(youtubeAudioSourceManager).setup();
+            youtubeIpRotatorSetup.forConfiguration(youtubeAudioSourceManager.getHttpInterfaceManager(), false)
+                .withMainDelegateFilter(null)
+                .setup();
             logger.info("YouTubeIpRotator set up with block: " + ipv6Blocks);
         }
     }
@@ -142,6 +149,9 @@ public class AudioManager extends AbstractShutdownable {
         if (playback.isPaused() && resumePaused) {
             playback.unpause();
         } else {
+            if (playback.getAudioQueue().isEmpty()) {
+                throw new InvalidCommandException("Queue is empty");
+            }
             QueueIterator queueIterator = new QueueIterator(playback, this);
             playback.setCurrentQueueIterator(queueIterator);
             queueIterator.playNext();
@@ -165,7 +175,18 @@ public class AudioManager extends AbstractShutdownable {
     }
 
     public PlayableFactory createPlayableFactory(SpotifyService spotifyService, TrackLoadingExecutor trackLoadingExecutor, boolean shouldRedirectSpotify) {
-        return new PlayableFactory(audioTrackLoader, spotifyService, trackLoadingExecutor, youTubeService, shouldRedirectSpotify);
+        return new PlayableFactory(audioTrackLoader, spotifyService, trackLoadingExecutor, youTubeService, shouldRedirectSpotify, filebrokerApi);
+    }
+
+    public void setChannel(AudioPlayback audioPlayback, AudioChannel channel) {
+        audioPlayback.setVoiceChannel(channel);
+        Guild guild = audioPlayback.getGuild();
+        guild.getAudioManager().setSendingHandler(new AudioPlayerSendHandler(audioPlayback.getAudioPlayer()));
+        try {
+            guild.getAudioManager().openAudioConnection(channel);
+        } catch (InsufficientPermissionException e) {
+            throw new InvalidCommandException("I do not have permission to join this voice channel!");
+        }
     }
 
     void createHistoryEntry(Playable playable, Guild guild, AudioChannel audioChannel) {
@@ -196,17 +217,6 @@ public class AudioManager extends AbstractShutdownable {
         Guild guild = playback.getGuild();
         WidgetRegistry widgetRegistry = guildManager.getContextForGuild(guild).getWidgetRegistry();
         CompletableFutures.thenAccept(futureMessage, message -> new NowPlayingWidget(widgetRegistry, guild, message).initialise());
-    }
-
-    private void setChannel(AudioPlayback audioPlayback, AudioChannel channel) {
-        audioPlayback.setVoiceChannel(channel);
-        Guild guild = audioPlayback.getGuild();
-        guild.getAudioManager().setSendingHandler(new AudioPlayerSendHandler(audioPlayback.getAudioPlayer()));
-        try {
-            guild.getAudioManager().openAudioConnection(channel);
-        } catch (InsufficientPermissionException e) {
-            throw new InvalidCommandException("I do not have permission to join this voice channel!");
-        }
     }
 
     @Override

@@ -558,11 +558,11 @@ the User instance (JDA entity) representing the user that sent the message, deri
 ```
     </example>
     <example title="Get member count of current guild">```groovy
-%1$seval context.guild.members.size()```
+%3$seval context.guild.members.size()```
     </example>
     <example title="Add reactions to your message, play a Spotify album, answer with the first option and send a message">
 ```groovy
-%1$seval context.message.addReaction(':ok_hand:').submit()
+%3$seval context.message.addReaction(':ok_hand:').submit()
 context.message.addReaction(':metal:').submit()
 command.run('play \$album meteora')
 command.run('answer 0')
@@ -571,7 +571,7 @@ return null
 ```
     </example>
     <example title="Send an embed message">```groovy
-%1$seval
+%3$seval
 def embedBuilder = new EmbedBuilder()
 embedBuilder.setTitle('Title')
 embedBuilder.setDescription('description')
@@ -580,7 +580,7 @@ return null
 ```
     </example>
     <example title="Enable shuffle if disabled, play a playlist and skip to title 'Numb'">```groovy
-%1$seval def playback = context.guildContext.playback
+%3$seval def playback = context.guildContext.playback
 def queue = playback.audioQueue
 if (!playback.isShuffle()) {
   command.run('shuffle')
@@ -602,12 +602,12 @@ command.run('play')
            description="Manage custom command interceptors. A command interceptor is a piece of code that is executed before running each command. Internally they are used to check permissions, parse the command input, check argument rules etc. The groovy scripting sandbox allows you to create additional custom interceptors that are queried and executed by the last interceptor in the chain before the actual command is executed. This command may create a new interceptor, delete an existing interceptor, display an interceptor or list all interceptors. Note that commands executed in scripts via 'command.run()' do not trigger custom command interceptors to avoid cycles. The interceptor and finalizer commands also do not trigger interceptors / finalizers so that malicious interceptors may always be deleted. See the help page for the eval command for available variables.">
     <example title="Create an interceptor that adds an 'ok hand' reaction to each message upon execution">
 ```groovy
-%1$sinterceptor %2$sidentifier="reaction" message.addReaction(':ok_hand:').submit()
+%3$sinterceptor %2$sidentifier="reaction" message.addReaction(':ok_hand:').submit()
 ```
     </example>
     <example title="Create an interceptor that introduces a chance to get rickrolled when entering a play command. This generates a random number up to 10000 and checks if it is divisible by 33, increase numbers to reduce likeness of rickroll.">
 ```groovy
-%1$sinterceptor %2$sidentifier="rickroll"
+%3$sinterceptor %2$sidentifier="rickroll"
 "if (command.getIdentifier() == 'play'
   &amp;&amp; !command.getCommandInput().isBlank()) {
 def rand = new Random()
@@ -649,7 +649,7 @@ if (i %% 33 == 0) {
     </argument>
     <example title="Create a script that adds a reaction to the command message, searches the album 'Meteora' and plays the first result">
 ```groovy
-%1$sscript %2$sidentifier="meteora"
+%3$sscript %2$sidentifier="meteora"
 "message.addReaction(':metal:').submit()
 command.run('play %2$salbum meteora')
 command.run('answer 0')"
@@ -657,12 +657,12 @@ command.run('answer 0')"
     </example>
     <example title="Create a script that enables shuffle if disabled">
 ```groovy
-%1$sscript %2$sidentifier="enableShuffle" if (!playback.isShuffle()) command.run('shuffle')
+%3$sscript %2$sidentifier="enableShuffle" if (!playback.isShuffle()) command.run('shuffle')
 ```
     </example>
     <example title="Create a script that skips to the specified track name in the queue (checking queue.hasNext with ignoreRepeat = true to avoid infinite loop)">
 ```groovy
-%1$sscript %2$sidentifier="skipTo"
+%3$sscript %2$sidentifier="skipTo"
 "def queue = playback.audioQueue
 if (queue.isEmpty()) {
   return null
@@ -693,12 +693,37 @@ command.run('play')"
            description="Creates and manages script interceptors that are executed after the command finished successfully. If the command runs into an error finalizers are not executed. Essentially &quot;finalizers&quot; are just interceptors that are queried and executed by a different internal interceptor that runs after the one that executes the command. Like the interceptor command running this command will not trigger custom command interceptors / finalizers. For more about interceptors see the help page for the interceptor command.">
     <example title="Create a finalizer that deletes the command message after the command completes">
 ```groovy
-%1$sfinalizer %2$sidentifier="deleteMessage" message.delete().submit()
+%3$sfinalizer %2$sidentifier="deleteMessage" message.delete().submit()
 ```
     </example>
     <example title="Show finalizer 'deleteMessage'">%1$sfinalizer deleteMessage</example>
     <example title="List all finalizers">%1$sfinalizer</example>
     <example title="Delete finalizer 'deleteMessage'">%1$sfinalizer %2$sdelete deleteMessage</example>
+  </command>
+  <command identifier="trigger"
+           implementation="net.robinfriedli.aiode.command.commands.scripting.TriggerCommand"
+           requiresInput="false"
+           category="SCRIPTING"
+           restrictedAccess="true"
+           description="Creates and manages script triggers that are executed when a specific event occurs. Available are the 'voicejoin' and 'voiceleave' events fired when someone joins or leaves a voice channel. For more information about scripting, check the help command pages for the eval and script commands.">
+    <argument identifier="event" description="The event identifier for when this script should be triggered. Required when creating a new trigger.">
+      <requires argument="identifier"/>
+    </argument>
+    <example title="List all triggers">%1$strigger</example>
+    <example title="Show trigger 'numbOnJoin'">%1$strigger numbOnJoin</example>
+    <example title="Play 'numb' when a user joins a specific voice channel if the queue is empty.">
+```groovy
+%3$strigger %2$sevent=voicejoin %2$sidentifier=numbOnJoin "
+if (voiceChannel.getId() == '484071462622330889' &amp;&amp; playback.getAudioQueue().isEmpty()) {
+  audioManager.setChannel(playback, voiceChannel);
+  command.run('play numb');
+}
+"
+```
+    </example>
+    <example title="Delete trigger 'numbOnJoin'">%1$strigger %2$sdelete numbOnJoin</example>
+    <example title="Deactivate trigger 'numbOnJoin'">%1$strigger %2$sdeactivate numbOnJoin</example>
+    <example title="Activate trigger 'numbOnJoin'">%1$strigger %2$sactivate numbOnJoin</example>
   </command>
   <command identifier="connect"
            implementation="net.robinfriedli.aiode.command.commands.web.ConnectCommand"
@@ -784,7 +809,7 @@ command.run('play')"
 
   <!-- abstract super commands -->
   <abstractCommand class="net.robinfriedli.aiode.command.commands.AbstractPlayableLoadingCommand">
-    <argument identifier="list" requiresInput="true" description="Search for a youtube, spotify or aiode playlist. Note that this argument is only required when searching, not when entering a URL."/>
+    <argument identifier="list" requiresInput="true" description="Search for a youtube, spotify or aiode playlist or filebroker collection. Note that this argument is only required when searching, not when entering a URL."/>
     <argument identifier="spotify" requiresInput="true" description="Search for a Spotify track, list or album. This supports Spotify query syntax (i.e. the filters &quot;artist:&quot;, &quot;album:&quot;, etc.). Note that this argument is only required when searching, not when entering a URL.">
       <excludes argument="youtube"/>
       <excludes argument="soundcloud"/>
@@ -801,17 +826,17 @@ command.run('play')"
       <excludes argument="youtube"/>
       <requires argument="list"/>
     </argument>
-    <argument identifier="album" requiresInput="true" description="Search for a Spotify album. Note that this argument is only required when searching, not when entering a URL.">
+    <argument identifier="album" requiresInput="true" description="Search for a Spotify album or filebroker collection. Note that this argument is only required when searching, not when entering a URL.">
       <excludes argument="list"/>
       <excludes argument="episode"/>
       <excludes argument="podcast"/>
-      <rule errorMessage="Argument 'album' may only be used with Spotify.">command.getSource().isSpotify()</rule>
+      <rule errorMessage="Argument 'album' may only be used with Spotify or filebroker.">command.getSource().isSpotify() || command.getSource().isFilebroker()</rule>
     </argument>
     <argument identifier="select" valueType="java.lang.Integer" requiresInput="true" description="Show a selection of YouTube playlists / videos or Spotify tracks to chose from. May be assigned a value from 1 to 20: %2$sselect=5">
       <valueCheck errorMessage="Limit must be between 1 and 20" check="value &gt; 0 &amp;&amp; value &lt;= 20"/>
-      <rule errorMessage="Argument 'select' may only be used with YouTube or Spotify.">
+      <rule errorMessage="Argument 'select' may only be used with YouTube, Spotify or filebroker.">
         def source = command.getSource();
-        source.isYouTube() || source.isSpotify()
+        source.isYouTube() || source.isSpotify() || command.getSource().isFilebroker()
       </rule>
     </argument>
     <argument identifier="soundcloud" requiresInput="true" description="Search a track on soundcloud. Note that this argument is only required when searching, not when entering a URL.">
@@ -841,6 +866,11 @@ command.run('play')"
         }
         return true;
       </rule>
+    </argument>
+    <argument identifier="filebroker" requiresInput="true" description="Search for posts or collections on [filebroker](https://filebroker.io/). The input must be in the form of a filebroker query, check [the documentation](https://github.com/filebroker/filebroker-server/wiki/filebroker-query-cheat-sheet). By default this will auto-select the first result, use the %2$sselect argument to get a list of results. Note that this argument is only required when searching, not when entering a URL.">
+      <excludes argument="spotify"/>
+      <excludes argument="youtube"/>
+      <excludes argument="soundcloud"/>
     </argument>
   </abstractCommand>
   <abstractCommand class="net.robinfriedli.aiode.command.commands.AbstractQueueLoadingCommand">

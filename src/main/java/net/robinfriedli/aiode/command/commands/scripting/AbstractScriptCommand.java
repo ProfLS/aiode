@@ -1,7 +1,10 @@
 package net.robinfriedli.aiode.command.commands.scripting;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+
+import javax.annotation.Nullable;
 
 import groovy.lang.GroovyShell;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -9,13 +12,16 @@ import net.robinfriedli.aiode.Aiode;
 import net.robinfriedli.aiode.command.AbstractCommand;
 import net.robinfriedli.aiode.command.CommandContext;
 import net.robinfriedli.aiode.command.CommandManager;
+import net.robinfriedli.aiode.command.widget.DynamicEmbedTablePaginationWidget;
+import net.robinfriedli.aiode.command.widget.EmbedTablePaginationWidget;
+import net.robinfriedli.aiode.command.widget.WidgetRegistry;
+import net.robinfriedli.aiode.concurrent.ThreadContext;
 import net.robinfriedli.aiode.entities.StoredScript;
 import net.robinfriedli.aiode.entities.xml.CommandContribution;
 import net.robinfriedli.aiode.exceptions.ExceptionUtils;
 import net.robinfriedli.aiode.exceptions.InvalidCommandException;
 import net.robinfriedli.aiode.persist.qb.QueryBuilderFactory;
 import net.robinfriedli.aiode.scripting.GroovyVariableManager;
-import net.robinfriedli.aiode.util.EmbedTable;
 import net.robinfriedli.aiode.util.SearchEngine;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 import org.hibernate.Session;
@@ -58,25 +64,44 @@ public abstract class AbstractScriptCommand extends AbstractCommand {
         List<StoredScript> storedScripts = queryBuilderFactory
             .find(StoredScript.class)
             .where((cb, root, subQueryFactory) -> cb.equal(
-                root.get("scriptUsage"),
-                subQueryFactory.createUncorrelatedSubQuery(StoredScript.ScriptUsage.class, "pk")
+                root.get("scriptUsage").get("pk"),
+                subQueryFactory.createUncorrelatedSubQuery(StoredScript.ScriptUsage.class, "pk", Long.class)
                     .where((cb1, root1) -> cb1.equal(root1.get("uniqueId"), scriptUsageId))
                     .build(session)
             ))
+            .orderBy((from, cb) -> cb.asc(from.get("identifier")))
             .build(session)
             .getResultList();
 
-        EmbedBuilder embedBuilder = new EmbedBuilder();
         if (storedScripts.isEmpty()) {
+            EmbedBuilder embedBuilder = new EmbedBuilder();
             embedBuilder.setDescription(String.format("No %ss saved", scriptUsageId));
             getMessageService().sendTemporary(embedBuilder, context.getChannel());
         } else {
-            embedBuilder.setDescription(String.format("Show a specific %s by entering its identifier", scriptUsageId));
-            EmbedTable table = new EmbedTable(embedBuilder);
-            table.addColumn("Identifier", storedScripts, StoredScript::getIdentifier);
-            table.addColumn("Active", storedScripts, script -> String.valueOf(script.isActive()));
-            table.build();
-            sendMessage(embedBuilder);
+            WidgetRegistry widgetRegistry = getContext().getGuildContext().getWidgetRegistry();
+            EmbedTablePaginationWidget.Column[] columns;
+            if ("trigger".equals(scriptUsageId)) {
+                columns = new EmbedTablePaginationWidget.Column[]{
+                    new EmbedTablePaginationWidget.Column<>("Identifier", StoredScript::getIdentifier),
+                    new EmbedTablePaginationWidget.Column<StoredScript>("Active", script -> String.valueOf(script.isActive())),
+                    new EmbedTablePaginationWidget.Column<>("Trigger", StoredScript::getTriggerEvent),
+                };
+            } else {
+                columns = new EmbedTablePaginationWidget.Column[]{
+                    new EmbedTablePaginationWidget.Column<>("Identifier", StoredScript::getIdentifier),
+                    new EmbedTablePaginationWidget.Column<StoredScript>("Active", script -> String.valueOf(script.isActive())),
+                };
+            }
+            DynamicEmbedTablePaginationWidget<StoredScript> paginationWidget = new DynamicEmbedTablePaginationWidget<StoredScript>(
+                widgetRegistry,
+                getContext().getGuild(),
+                getContext().getChannel(),
+                "",
+                String.format("Show a specific %s by entering its identifier", scriptUsageId),
+                columns,
+                storedScripts
+            );
+            paginationWidget.initialise();
         }
     }
 
@@ -100,7 +125,16 @@ public abstract class AbstractScriptCommand extends AbstractCommand {
             groovyShell = new GroovyShell(aiode.getGroovySandboxComponent().getCompilerConfiguration());
         }
 
+        Map<String, ?> variables = defineAdditionalVariables();
+        if (variables != null) {
+            ThreadContext.Current.install(GroovyVariableManager.ADDITIONAL_VARIABLES_KEY, variables);
+        }
         groovyVariableManager.prepareShell(groovyShell);
+        if (variables != null) {
+            for (Map.Entry<String, ?> variable : variables.entrySet()) {
+                groovyShell.setVariable(variable.getKey(), variable.getValue());
+            }
+        }
         try {
             groovyShell.parse(script);
         } catch (MultipleCompilationErrorsException e) {
@@ -121,8 +155,18 @@ public abstract class AbstractScriptCommand extends AbstractCommand {
         storedScript.setScript(script);
         storedScript.setScriptUsage(scriptUsage);
         storedScript.setActive(!argumentSet("deactivate"));
+        storedScript.setTriggerEvent(triggerEvent());
 
         invoke(() -> session.persist(storedScript));
+    }
+
+    protected String triggerEvent() {
+        return null;
+    }
+
+    @Nullable
+    protected Map<String, ?> defineAdditionalVariables() {
+        return null;
     }
 
     private void sendScript(String identifier, Session session) {
@@ -135,6 +179,9 @@ public abstract class AbstractScriptCommand extends AbstractCommand {
             EmbedBuilder embedBuilder = new EmbedBuilder();
             embedBuilder.setTitle(String.format("%s%s: %s", firstLetter, rest, script.getIdentifier()));
             embedBuilder.addField("Active", String.valueOf(script.isActive()), true);
+            if ("trigger".equals(scriptUsageId)) {
+                embedBuilder.addField("Trigger", script.getTriggerEvent(), true);
+            }
             embedBuilder.addField("Groovy script", "```groovy" + System.lineSeparator() + script.getScript() + System.lineSeparator() + "```", false);
             sendMessage(embedBuilder);
         } else {

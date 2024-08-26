@@ -25,6 +25,7 @@ import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import net.robinfriedli.aiode.Aiode;
 import net.robinfriedli.aiode.audio.spotify.SpotifyService;
+import net.robinfriedli.aiode.boot.SpringPropertiesConfig;
 import net.robinfriedli.aiode.command.argument.ArgumentController;
 import net.robinfriedli.aiode.command.commands.general.AnswerCommand;
 import net.robinfriedli.aiode.command.interceptor.CommandInterceptorChain;
@@ -144,18 +145,33 @@ public abstract class AbstractCommand implements Command {
         return newInstance;
     }
 
+    public void run(String command) {
+        run(command, true);
+    }
+
     /**
      * Run a custom command like you would enter it to discord, this includes commands and presets but excludes scripts
      * to avoid recursion.
      * This method is mainly used in groovy scripts.
      *
-     * @param command the command string
+     * @param command          the command string
+     * @param inheritArguments whether to inherit arguments from the current command invocation,
+     *                         useful to forward arguments from the scrip command invocation to commands invoked by the script
      */
-    public void run(String command) {
+    public void run(String command, boolean inheritArguments) {
         StaticSessionProvider.consumeSession(session -> {
             CommandContext fork = context.fork(command, session);
             AbstractCommand abstractCommand = commandManager.instantiateCommandForContext(fork, session, false)
                 .orElseThrow(() -> new InvalidCommandException("No command found for input"));
+
+            if (inheritArguments) {
+                ArgumentController sourceArgumentController = getArgumentController();
+                ArgumentController targetArgumentController = abstractCommand.getArgumentController();
+                for (Map.Entry<String, ArgumentController.ArgumentUsage> argumentUsage : sourceArgumentController.getUsedArguments().entrySet()) {
+                    targetArgumentController.setArgument(argumentUsage.getKey(), argumentUsage.getValue());
+                }
+            }
+
             ExecutionContext oldExecutionContext = ExecutionContext.Current.get();
             ExecutionContext.Current.set(fork);
             try {
@@ -564,9 +580,20 @@ public abstract class AbstractCommand implements Command {
         SCRIPTING("scripting", "Commands that execute or manage groovy scripts") {
             @Override
             public @Nullable MessageEmbed.Field createEmbedField() {
-                Boolean enableScriptingProp = Aiode.get().getSpringPropertiesConfig().getApplicationProperty(Boolean.class, "aiode.preferences.enable_scripting");
-                if (!Boolean.TRUE.equals(enableScriptingProp)) {
-                    return null;
+                Aiode aiode = Aiode.get();
+                SecurityManager securityManager = aiode.getSecurityManager();
+                SpringPropertiesConfig springPropertiesConfig = aiode.getSpringPropertiesConfig();
+                Boolean enableScriptingProp = springPropertiesConfig.getApplicationProperty(Boolean.class, "aiode.preferences.enable_scripting");
+                Boolean enableScriptingForSupporters = springPropertiesConfig.getApplicationProperty(Boolean.class, "aiode.preferences.enable_scripting_for_supporters");
+                Optional<User> currentUser = ExecutionContext.Current.optional().map(ExecutionContext::getUser);
+                if (!Boolean.TRUE.equals(enableScriptingProp)
+                    && !currentUser.map(securityManager::isAdmin).orElse(false)
+                    && !(Boolean.TRUE.equals(enableScriptingForSupporters) && currentUser.map(securityManager::isSupporter).orElse(false))) {
+                    if (!Boolean.TRUE.equals(enableScriptingProp) && Boolean.TRUE.equals(enableScriptingForSupporters)) {
+                        return new MessageEmbed.Field(getName(), "The scripting sandbox is only available to [supporters](https://ko-fi.com/R5R0XAC5J)", true);
+                    } else {
+                        return null;
+                    }
                 }
 
                 return super.createEmbedField();

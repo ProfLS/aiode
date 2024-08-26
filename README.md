@@ -1,6 +1,10 @@
 ![# botify](https://raw.githubusercontent.com/robinfriedli/aiode/master/resources-public/img/aiode-logo-wide.png)
  Discord bot that plays Spotify tracks and YouTube videos or any URL including Soundcloud links and Twitch streams.
 
+Help keep aiode free and open source for everyone
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/R5R0XAC5J)
+
 * Play and search Spotify tracks and YouTube videos or playlists or play any URL including Soundcloud links and Twitch streams
 * Create cross-platform playlists with tracks from any source
 * Simple and customisable player commands
@@ -38,6 +42,7 @@ router's public ip and setup port forwarding for your router.
 ##### 4.1.1 Navigate to your cloned project and go to `src/main/resources` and create the `settings-private.properties` from the example below and fill in the blanks. This file is included in gitignore to make sure you don't accidentally publish it.
 ##### 4.1.2 Adjust datasource properties and enter the database user and password, database setup will be discussed further in 4.2.1.
 ##### 4.1.3 To take advantage of the admin commands that can perform administrative actions, such as updating and restarting the bot, be sure to add your Discord user id to the `aiode.security.admin_users` property. To find your Discord user id, enable Developer Mode in the App Settings > Appearance. Then go to any guild, right click your user and click "Copy ID".
+##### 4.1.4 To supplement [filebroker.io](https://github.com/filebroker) integration, you may set up a bot account and paste the username and password below. This ensures that the bot has access to all posts shared with that bot account.
 ```properties
 ##########
 # tokens #
@@ -74,6 +79,11 @@ aiode.tokens.topgg_token=
 # set these properties to support age restricted videos on YouTube, see https://github.com/Walkyst/lavaplayer-fork/issues/18
 aiode.tokens.yt-email=
 aiode.tokens.yt-password=
+##############
+# filebroker #
+##############
+aiode.filebroker.bot_user_name=
+aiode.filebroker.bot_user_password=
 ```
 #### 4.2 Adjust application.properties
 ##### 4.2.1 Review the datasource properties and make necessary adjustments. If you are using a local postgres server and name your database "aiode" you can leave it as it is. If you need help setting up your postgres server, please refer to their official documentation: http://www.postgresqltutorial.com/.
@@ -91,7 +101,7 @@ aiode.server.spotify_login_callback=http://localhost:8000/login
 spring.liquibase.change-log=classpath:liquibase/dbchangelog.xml
 spring.liquibase.contexts=definition,initialvalue,constraint
 liquibase.change-log-path=src/main/resources/liquibase/dbchangelog.xml
-liquibase.referenceUrl=hibernate:spring:net.robinfriedli.aiode.entities?dialect=org.hibernate.dialect.PostgreSQL10Dialect
+liquibase.referenceUrl=hibernate:spring:net.robinfriedli.aiode.entities?dialect=org.hibernate.dialect.PostgreSQLDialect
 ###############
 # preferences #
 ###############
@@ -119,7 +129,7 @@ aiode.preferences.enable_scripting=true
 ##############
 spring.datasource.url=jdbc:postgresql://localhost:5432/aiode
 spring.datasource.driverClassName=org.postgresql.Driver
-spring.jpa.database-platform=org.hibernate.dialect.PostgreSQL10Dialect
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 spring.jpa.properties.hibernate.current_session_context_class=thread
 # pool
 spring.datasource.hikari.minimumIdle=5
@@ -130,15 +140,19 @@ spring.jpa.properties.hibernate.cache.use_second_level_cache=true
 spring.jpa.properties.hibernate.cache.region.factory_class=org.hibernate.cache.jcache.JCacheRegionFactory
 spring.jpa.properties.hibernate.javax.cache.provider=org.ehcache.jsr107.EhcacheCachingProvider
 spring.jpa.properties.hibernate.javax.cache.missing_cache_strategy=create
+##############
+# filebroker #
+##############
+aiode.filebroker.api_base_url=https://filebroker.io/api/
 ```
 
 
 ### 6 Compile and run aiode
 Requires:
-* java jdk 17 or above (preferably 17, as it is the version used in development and thus main supported version)
-* rust and cargo-make with the `wasm32-unknown-unknown` target for the webapp
+* java jdk 21 or above (preferably 21, as it is the version used in development and thus main supported version)
+* (only for the experimental webapp) rust and cargo-make with the `wasm32-unknown-unknown` target for the webapp
 
-#### 6.1 Compile webapp
+#### 6.1 Compile webapp (experimental only, skip for normal installation)
 Install rust, preferably via rustup, then add the `wasm32-unknown-unknown` target by running `rustup target add wasm32-unknown-unknown` and install cargo-make with `cargo install --force cargo-make`. Finally, navigate to `src/main/webapp` and compile the webapp with `cargo make build`.
 
 #### 6.2 Compile bot
