@@ -33,8 +33,10 @@ repositories {
         url "https://maven.lavalink.dev/releases"
     }
 
-    maven { url 'https://jitpack.io' }
-
+    maven {
+        url 'https://jitpack.io'
+    }
+    
 }
 
 compileJava.options.encoding = "UTF-8"
