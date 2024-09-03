@@ -67,7 +67,7 @@ public class LoginHandler implements HttpHandler {
                 CompletableFuture<Login> pendingLogin = loginManager.getPendingLogin(user);
                 createLogin(accessCode, user, pendingLogin);
 
-                response = String.format(html, "Welcome, " + user.getName());
+                response = String.format(html, "<span style=\"color: hsl(0, 0%, 94%);\">Welcome, </span>" + user.getName());
             } else if (error != null) {
                 response = String.format(html, "<span style=\"color: red\">Error:</span> " + error);
             } else {

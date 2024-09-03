@@ -1,43 +1,50 @@
-<!-- Parameters; 1. title, 2. title, 3. duration, 4. created user, 5. track number, 6. list -->
 <!DOCTYPE html>
 <html lang="en">
-
-    <head>
-        <title>%s</title>
-        <link rel="icon" type="image/png" href="resources-public/img/aiode-logo.png"/>
-        <link rel="stylesheet" type="text/css" href="resources-public/style.css"/>
-        <meta charset="UTF-8"/>
-    </head>
-
-    <body>
-        <img width="400" height="175" src="resources-public/img/aiode-logo-wide.png"/>
-        <div class="head-wrapper">
-            <table class="head-table">
-                <tr>
-                    <td>Name:</td>
-                    <td>%s</td>
-                </tr>
-                <tr>
-                    <td>Duration:</td>
-                    <td>%s</td>
-                </tr>
-                <tr>
-                    <td>Created by:</td>
-                    <td>%s</td>
-                </tr>
-                <tr>
-                    <td>Tracks:</td>
-                    <td>%s</td>
-                </tr>
-            </table>
+  <head>
+      <title>%s</title>
+      <link rel="stylesheet" href="../resources-public/playlist.css"/>
+      <link rel="icon" type="image/png" href="../resources-public/img/ProfPianoLogo.png"/>
+      <meta charset="UTF-8"/>
+      <meta name="description" content="Your custom playlist"/>
+  </head>
+  <body>
+    <div>
+      <div class="home-container">
+        <div class="home-container01">
+          <div class="home-container02">
+            <div class="home-container03">
+              <img
+                src="../resources-public/img/ProfPianoLogo.png"
+                alt="image"
+                class="home-image"
+              />
+            </div>
+            <div class="home-container04">
+              <div class="home-container05">
+                <h1 class="Heading home-text">%s</h1>
+              </div>
+              <div class="home-container06">
+                <p class="subHeading">Your custom playlist</p>
+              </div>
+            </div>
+          </div>
+          <div class="home-container07">
+            <p class="home-text1"><span class="span1 home-text2">Created by</span>%s</p>
+          </div>
+          <div class="home-container07">
+            <p class="home-text1"><span class="span1 home-text2">Duration</span>%s</p>
+          </div>
+          <div class="home-container07">
+            <p class="home-text1"><span class="span1 home-text2">Tracks</span>%s</p>
+          </div>
         </div>
-        <br/>
-        <br/>
-        <div class="general-wrapper">
+        <div class="home-container10">
+          <h1 class="home-text home-text5">Playlist</h1>
+          <div class="home-text4">
             <table class="content-table">
-                <thead>
+                <thead class="home-text4 home-text3">
                     <tr>
-                        <td>Nr</td>
+                        <td>No.</td>
                         <td>Track</td>
                         <td>Duration</td>
                     </tr>
@@ -46,7 +53,9 @@
                     %s
                 </tbody>
             </table>
+          </div>
         </div>
-    </body>
-
+      </div>
+    </div>
+  </body>
 </html>

@@ -1,15 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="login-html bg-default">
 
     <head>
-        <title>botify login</title>
-        <link rel="icon" type="image/png" href="resources-public/img/aiode-logo.png"/>
+        <title>Prof's Piano Spotify Login</title>
+        <link rel="stylesheet" href="../resources-public/login.css"/>
+        <link rel="icon" type="image/png" href="../resources-public/img/ProfPianoLogo.png"/>
         <meta charset="UTF-8"/>
+        <meta name="description" content="The landing page for Spotify API logins via Prof's Piano."/>
     </head>
 
-    <body>
-        <img width="400" height="175" src="resources-public/img/aiode-logo-wide.png"/>
-        <p style="font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif; font-size: 30px;">%s</p>
+    <body class="login-body">
+        <h1 class="head-wrapper">
+            %s
+        </h1>
+
+        <h2 class="sub-head-wrapper">
+            Your spotify library is now linked to Prof's Piano
+        </h2>
+
+        <div style="display: flex; justify-content: center;">
+            <img 
+                src="../resources-public/img/SpotifyLink.png" 
+                alt="Spotify linked with Prof's Piano"
+                class="img-container"
+                width="auto"
+                height="450px"
+            />
+        </div>
+
+        <p>
+            <span class="general-wrapper left-inline">Use</span>
+            <span class="inline-code">=spotify &ltplaylist name&gt</span>
+            <span class="general-wrapper right-inline">to access a playlist you own.</span>
+        </p>
     </body>
 
 </html>
