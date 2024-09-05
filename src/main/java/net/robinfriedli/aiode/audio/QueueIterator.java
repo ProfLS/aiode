@@ -22,11 +22,13 @@ import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.robinfriedli.aiode.Aiode;
 import net.robinfriedli.aiode.audio.queue.AudioQueue;
 import net.robinfriedli.aiode.audio.spotify.SpotifyTrackRedirect;
+import net.robinfriedli.aiode.audio.youtube.YouTubeVideo;
 import net.robinfriedli.aiode.boot.SpringPropertiesConfig;
 import net.robinfriedli.aiode.discord.MessageService;
 import net.robinfriedli.aiode.discord.property.GuildPropertyManager;
 import net.robinfriedli.aiode.discord.property.properties.ColorSchemeProperty;
 import net.robinfriedli.aiode.entities.GuildSpecification;
+import net.robinfriedli.aiode.exceptions.ExceptionUtils;
 import net.robinfriedli.aiode.exceptions.UnavailableResourceException;
 import net.robinfriedli.aiode.exceptions.handler.handlers.LoggingUncaughtExceptionHandler;
 import net.robinfriedli.aiode.filebroker.FilebrokerPlayableWrapper;
@@ -79,6 +81,9 @@ public class QueueIterator extends AudioEventAdapter {
     // due to an error. If the user skips a track a new QueueIterator instance is created.
     private final AtomicInteger attemptCount = new AtomicInteger(0);
 
+    private volatile boolean isYouTubeBanned = false;
+    private volatile boolean retryCurrent = false;
+
     QueueIterator(AudioPlayback playback, AudioManager audioManager) {
         this.playback = playback;
         this.queue = playback.getAudioQueue();
@@ -108,7 +113,9 @@ public class QueueIterator extends AudioEventAdapter {
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason reason) {
         if (reason.mayStartNext) {
             handleAudioEvent(() -> {
-                if (reason == AudioTrackEndReason.LOAD_FAILED) {
+                if (retryCurrent) {
+                    playNext();
+                } else if (reason == AudioTrackEndReason.LOAD_FAILED) {
                     iterateQueue(playback, queue, true);
                 } else {
                     // only reset the retryCount once a track has ended successfully, as tracks can fail after they started
@@ -126,16 +133,32 @@ public class QueueIterator extends AudioEventAdapter {
 
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
-        if (exception.severity == FriendlyException.Severity.COMMON) {
-            logger.warn("Common lavaplayer track error: " + exception.getMessage());
+        Throwable e = ExceptionUtils.getRootCause(exception);
+        Playable playable = track.getUserData(Playable.class);
+        if (!isYouTubeBanned && isYouTubeBanError(playable, e)) {
+            isYouTubeBanned = true;
+            if (playable instanceof SpotifyTrackRedirect spotifyTrackRedirect) {
+                // don't send error if the yt redirect failed and a soundcloud track is present because the track will get retried
+                if (spotifyTrackRedirect.isYouTube() && spotifyTrackRedirect.getCompletedSoundCloudTrack() != null) {
+                    logger.warn("Failed to play YouTube video for redirected Spotify track, trying SoundCloud instead");
+                    retryCurrent = true;
+                } else {
+                    if (exception.severity == FriendlyException.Severity.COMMON) {
+                        logger.warn("Common lavaplayer track error: " + exception.getMessage());
+                    } else {
+                        logger.error("Lavaplayer track exception", exception);
+                    }
+                    sendError(playable, e);
+                }
+            }
         } else {
-            logger.error("Lavaplayer track exception", exception);
+            if (exception.severity == FriendlyException.Severity.COMMON) {
+                logger.warn("Common lavaplayer track error: " + exception.getMessage());
+            } else {
+                logger.error("Lavaplayer track exception", exception);
+            }
+            sendError(playable, e);
         }
-        Throwable e = exception;
-        while (e.getCause() != null) {
-            e = e.getCause();
-        }
-        sendError(track.getUserData(Playable.class), e);
     }
 
     void setReplaced() {
@@ -145,6 +168,13 @@ public class QueueIterator extends AudioEventAdapter {
     void playNext() {
         if (isReplaced) {
             return;
+        }
+        boolean ignoreCache;
+        if (retryCurrent) {
+            retryCurrent = false;
+            ignoreCache = true;
+        } else {
+            ignoreCache = false;
         }
 
         // don't skip over more than 3 items to avoid a frozen queue
@@ -165,15 +195,32 @@ public class QueueIterator extends AudioEventAdapter {
 
         Playable track = queue.getCurrent();
         AudioItem result = null;
-        AudioTrack cachedTracked = track.getCached();
-        if (cachedTracked != null) {
-            result = cachedTracked.makeClone();
+        if (!ignoreCache) {
+            AudioTrack cachedTracked = track.getCached();
+            if (cachedTracked != null) {
+                result = cachedTracked.makeClone();
+            }
         }
 
         if (result == null) {
             String playbackUrl;
             try {
-                playbackUrl = track.getPlaybackUrl();
+                // for SpotifyTrackRedirect, prioritise YouTube last when banned
+                if (isYouTubeBanned && track instanceof SpotifyTrackRedirect spotifyTrackRedirect) {
+                    FilebrokerPlayableWrapper completedFilebrokerPost = spotifyTrackRedirect.getCompletedFilebrokerPost();
+                    if (completedFilebrokerPost != null) {
+                        playbackUrl = completedFilebrokerPost.getPlaybackUrl();
+                    } else {
+                        UrlPlayable completedSoundCloudTrack = spotifyTrackRedirect.getCompletedSoundCloudTrack();
+                        if (completedSoundCloudTrack != null) {
+                            playbackUrl = completedSoundCloudTrack.getPlaybackUrl();
+                        } else {
+                            playbackUrl = track.getPlaybackUrl();
+                        }
+                    }
+                } else {
+                    playbackUrl = track.getPlaybackUrl();
+                }
             } catch (UnavailableResourceException e) {
                 iterateQueue(playback, queue, true);
                 return;
@@ -182,6 +229,23 @@ public class QueueIterator extends AudioEventAdapter {
             try {
                 result = audioTrackLoader.loadByIdentifier(playbackUrl);
             } catch (FriendlyException e) {
+                if (!isYouTubeBanned && isYouTubeBanError(track, e)) {
+                    isYouTubeBanned = true;
+                    if (track instanceof SpotifyTrackRedirect) {
+                        // retry redirect using soundcloud on yt ban
+                        retryCurrent = true;
+                        logger.warn("Failed to play YouTube video for redirected Spotify track, trying SoundCloud instead");
+                        playNext();
+                        return;
+                    }
+                }
+
+                if (e.severity == FriendlyException.Severity.COMMON) {
+                    logger.warn("Common lavaplayer track error: " + e.getMessage());
+                } else {
+                    logger.error("Lavaplayer track exception", e);
+                }
+
                 sendError(track, e);
 
                 iterateQueue(playback, queue, true);
@@ -226,6 +290,12 @@ public class QueueIterator extends AudioEventAdapter {
         }
     }
 
+    private boolean isYouTubeBanError(@Nullable Playable track, Throwable e) {
+        return e.getMessage() != null
+            && (track instanceof YouTubeVideo || (track instanceof SpotifyTrackRedirect spotifyTrackRedirect && spotifyTrackRedirect.isYouTube()))
+            && (e.getMessage().contains("not a bot") || e.getMessage().contains("403"));
+    }
+
     private void sendError(@Nullable Playable track, Throwable e) {
         if (attemptCount.get() == 1) {
             MessageChannel communicationChannel = playback.getCommunicationChannel();
@@ -241,7 +311,12 @@ public class QueueIterator extends AudioEventAdapter {
                 embedBuilder.setTitle("Could not load current track");
             }
 
-            if (e.getMessage() != null && e.getMessage().length() <= 4096) {
+            if (isYouTubeBanError(track, e)) {
+                embedBuilder.setDescription("YouTube blocked playback due to bot detection. Note that Spotify tracks are looked up on YouTube, unless they are found on [filebroker](https://filebroker.io/) or SoundCloud. " +
+                    "[Supporters](https://ko-fi.com/R5R0XAC5J) may circumvent YouTube bot detection by inviting a limited private bot using the invite command. " +
+                    "Larger bots generating too much traffic will eventually get banned, thus stable YouTube support for the public bot is no longer possible. " +
+                    "To continue playing Spotify content on the public bot, you can help by uploading content to [filebroker](https://filebroker.io/register).");
+            } else if (e.getMessage() != null && e.getMessage().length() <= 4096) {
                 embedBuilder.setDescription("Message returned by source: " + e.getMessage());
             }
 
