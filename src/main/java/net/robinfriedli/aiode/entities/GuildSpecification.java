@@ -54,6 +54,8 @@ public class GuildSpecification implements Serializable {
     private String defaultSource;
     @Column(name = "default_list_source")
     private String defaultListSource;
+    @Column(name = "audio_only")
+    private Boolean audioOnly
     @Column(name = "argument_prefix")
     private Character argumentPrefix;
     @Column(name = "temp_message_timeout")
@@ -178,6 +180,12 @@ public class GuildSpecification implements Serializable {
 
     public void setDefaultSource(String defaultSource) {
         this.defaultSource = defaultSource;
+    }
+
+    public Boolean isAudioOnly() { return audioOnly; }
+
+    public void setAudioOnly(Boolean audioOnly) {
+        this.audioOnly = audioOnly;
     }
 
     public String getDefaultListSource() {

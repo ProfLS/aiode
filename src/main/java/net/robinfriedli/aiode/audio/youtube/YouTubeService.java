@@ -260,7 +260,14 @@ public class YouTubeService extends AbstractShutdownable {
                 return StringList.create();
             }
         );
-        String searchTerm = spotifyTrack.getName() + " " + artists.toSeparatedString(" ");
+
+        String searchTerm;
+
+        if (Aiode.get().getGuildManager().getProperty("audioOnly")) {
+            searchTerm = spotifyTrack.getName() + " " + artists.toSeparatedString(" ") + " audio";
+        } else {
+            searchTerm = spotifyTrack.getName() + " " + artists.toSeparatedString(" ");
+        }
 
         YouTubeVideoSearchResult video;
         if (currentQuota.get() < quotaThreshold) {
