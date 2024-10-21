@@ -34,4 +34,8 @@
     <acceptedValue>queue next</acceptedValue>
     <acceptedValue>queue last</acceptedValue>
   </guildProperty>
+  <guildProperty property="audioOnly" name="audio only" defaultValue="true" implementation="net.robinfriedli.aiode.discord.property.properties.AudioOnlyProperty" updateMessage="Set Audio Only mode to %s" description="If set to true, Spotify redirected queries will be appended with 'audio' to avoid music videos on Youtube.">
+    <acceptedValue>true</acceptedValue>
+    <acceptedValue>false</acceptedValue>
+  </guildProperty>
 </guildProperties>
