@@ -51,7 +51,7 @@ public class GuildSpecification implements Serializable {
     @Column(name = "default_list_source")
     private String defaultListSource;
     @Column(name = "audio_only")
-    private Boolean audioOnly
+    private Boolean audioOnly;
     @Column(name = "argument_prefix")
     private Character argumentPrefix;
     @Column(name = "temp_message_timeout")
