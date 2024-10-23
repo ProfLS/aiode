@@ -1,4 +1,4 @@
-![# botify](https://raw.githubusercontent.com/robinfriedli/aiode/master/resources-public/img/aiode-logo-wide.png)
+![# profspiano](https://raw.githubusercontent.com/profls/aiode/master/resources-public/img/profspianologo(wide).png)
  Discord bot that plays Spotify tracks and YouTube videos or any URL including Soundcloud links and Twitch streams.
 
 Help keep aiode free and open source for everyone
