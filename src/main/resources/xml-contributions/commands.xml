@@ -14,15 +14,6 @@
     <example title="Add tracks from the current queue to a list">%1$sadd %2$squeue my list</example>
     <example title="Add tracks from a url">%1$sadd http://someurl.com %2$sto linkin park</example>
   </command>
-  <command identifier="next"
-           implementation="net.robinfriedli.aiode.command.commands.playback.NextCommand"
-           requiresInput="true"
-           category="PLAYBACK"
-           description="Play a song next, then resume the queue after playback is finished.">
-    <example title="Play Numb by Linkin Park after the currently playing song, then resume queue.">%1$snext Numb</example>
-    <example title="Play a youtube playlist after the currently playing song, then resume queue.">%1$snext https://www.youtube.com/playlist?list</example>
-    <example title="Play your playlist from spotify called Pop after the currently playing song, then resume queue.">%1$snext -list -own -spotify Pop</example>
-  </command>
   <command identifier="answer"
            implementation="net.robinfriedli.aiode.command.commands.general.AnswerCommand"
            requiresInput="true"

@@ -263,7 +263,7 @@ public class YouTubeService extends AbstractShutdownable {
 
         String searchTerm;
 
-        if (Aiode.get().getGuildManager().getProperty("audioOnly")) {
+        if (Aiode.get().getGuildPropertyManager().getProperty("audioOnly")) {
             searchTerm = spotifyTrack.getName() + " " + artists.toSeparatedString(" ") + " audio";
         } else {
             searchTerm = spotifyTrack.getName() + " " + artists.toSeparatedString(" ");
