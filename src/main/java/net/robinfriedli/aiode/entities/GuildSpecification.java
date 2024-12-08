@@ -79,6 +79,8 @@ public class GuildSpecification implements Serializable {
     private String privateBotInstanceId;
     @Column(name = "private_bot_assignment_last_heartbeat", columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private OffsetDateTime privateBotAssignmentLastHeartbeat;
+    @Column(name = "initialized")
+    private Boolean initialized;
 
     public GuildSpecification() {
     }
@@ -266,5 +268,13 @@ public class GuildSpecification implements Serializable {
 
     public void setPrivateBotAssignmentLastHeartbeat(OffsetDateTime privateBotAssignmentLastHeartbeat) {
         this.privateBotAssignmentLastHeartbeat = privateBotAssignmentLastHeartbeat;
+    }
+
+    public Boolean isInitialized() {
+        return initialized;
+    }
+
+    public void setInitialized(Boolean initialized) {
+        this.initialized = initialized;
     }
 }
