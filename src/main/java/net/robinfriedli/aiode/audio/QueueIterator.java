@@ -11,10 +11,13 @@ import org.slf4j.LoggerFactory;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
+import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioTrack;
+import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudM3uAudioTrack;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioItem;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import dev.lavalink.youtube.track.YoutubeAudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
@@ -103,7 +106,7 @@ public class QueueIterator extends AudioEventAdapter {
             if (current != null) {
                 audioManager.createHistoryEntry(current, playback.getGuild(), playback.getAudioChannel());
                 if (shouldSendPlaybackNotification()) {
-                    sendCurrentTrackNotification(current);
+                    sendCurrentTrackNotification(current, track);
                 }
             }
         });
@@ -142,23 +145,16 @@ public class QueueIterator extends AudioEventAdapter {
                 if (spotifyTrackRedirect.isYouTube() && spotifyTrackRedirect.getCompletedSoundCloudTrack() != null) {
                     logger.warn("Failed to play YouTube video for redirected Spotify track, trying SoundCloud instead");
                     retryCurrent = true;
-                } else {
-                    if (exception.severity == FriendlyException.Severity.COMMON) {
-                        logger.warn("Common lavaplayer track error: " + exception.getMessage());
-                    } else {
-                        logger.error("Lavaplayer track exception", exception);
-                    }
-                    sendError(playable, e);
+                    return;
                 }
             }
-        } else {
-            if (exception.severity == FriendlyException.Severity.COMMON) {
-                logger.warn("Common lavaplayer track error: " + exception.getMessage());
-            } else {
-                logger.error("Lavaplayer track exception", exception);
-            }
-            sendError(playable, e);
         }
+        if (exception.severity == FriendlyException.Severity.COMMON) {
+            logger.warn("Common lavaplayer track error: " + exception.getMessage());
+        } else {
+            logger.error("Lavaplayer track exception", exception);
+        }
+        sendError(playable, e);
     }
 
     void setReplaced() {
@@ -231,7 +227,7 @@ public class QueueIterator extends AudioEventAdapter {
             } catch (FriendlyException e) {
                 if (!isYouTubeBanned && isYouTubeBanError(track, e)) {
                     isYouTubeBanned = true;
-                    if (track instanceof SpotifyTrackRedirect) {
+                    if (track instanceof SpotifyTrackRedirect spotifyTrackRedirect && spotifyTrackRedirect.getCompletedSoundCloudTrack() != null) {
                         // retry redirect using soundcloud on yt ban
                         retryCurrent = true;
                         logger.warn("Failed to play YouTube video for redirected Spotify track, trying SoundCloud instead");
@@ -330,7 +326,7 @@ public class QueueIterator extends AudioEventAdapter {
         }
     }
 
-    private void sendCurrentTrackNotification(Playable currentTrack) {
+    private void sendCurrentTrackNotification(Playable currentTrack, AudioTrack track) {
         MessageChannel communicationChannel = playback.getCommunicationChannel();
 
         if (communicationChannel == null) {
@@ -353,6 +349,10 @@ public class QueueIterator extends AudioEventAdapter {
             || (currentTrack instanceof SpotifyTrackRedirect spotifyTrackRedirect && spotifyTrackRedirect.isRedirectedToFilebroker());
         if (isFilebroker) {
             footerBuilder.append(" | ").append("Powered by filebroker.io");
+        } else if (currentTrack instanceof SpotifyTrackRedirect && (track instanceof YoutubeAudioTrack || track instanceof com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack)) {
+            footerBuilder.append(" | ").append("Powered by YouTube");
+        } else if (currentTrack instanceof SpotifyTrackRedirect && (track instanceof SoundCloudAudioTrack || track instanceof SoundCloudM3uAudioTrack)) {
+            footerBuilder.append(" | ").append("Powered by SoundCloud");
         } else {
             footerBuilder.append(" | ").append("View the queue using the queue command");
         }
